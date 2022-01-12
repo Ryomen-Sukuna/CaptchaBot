@@ -13,11 +13,8 @@ from constants import CONST
 ### Auxiliary Functions
 
 def is_valid(langname, lang, englang):
-    missing = []
-    for key in englang:
-        if key not in lang:
-            missing.append(key)
-    if len(missing) == 0:
+    missing = [key for key in englang if key not in lang]
+    if not missing:
         print("{} is complete".format(langname))
         return True
     else:

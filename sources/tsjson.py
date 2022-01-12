@@ -30,12 +30,11 @@ class TSjson(object):
             self.lock.acquire() # Cerramos (adquirimos) el mutex
             if not os.path.exists(self.file_name): # Si el archivo no existe
                 read = {} # Devolver un diccionario vacio
-            else: # Si el archivo existe
-                if not os.stat(self.file_name).st_size: # Si el archivo esta vacio
-                    read = {} # Devolver un diccionario vacio
-                else: # El archivo existe y tiene contenido
-                    with open(self.file_name, "r", encoding="utf-8") as f: # Abrir el archivo en modo lectura
-                        read = json.load(f, object_pairs_hook=OrderedDict) # Leer todo el archivo y devolver la lectura de los datos json usando un diccionario ordenado
+            elif not os.stat(self.file_name).st_size: # Si el archivo esta vacio
+                read = {} # Devolver un diccionario vacio
+            else: # El archivo existe y tiene contenido
+                with open(self.file_name, "r", encoding="utf-8") as f: # Abrir el archivo en modo lectura
+                    read = json.load(f, object_pairs_hook=OrderedDict) # Leer todo el archivo y devolver la lectura de los datos json usando un diccionario ordenado
         except Exception as e: # Error intentando abrir el archivo
             print("    Error reading json file {}. {}".format(self.file_name, str(e))) # Escribir en consola el error
             read = None # Devolver None
@@ -66,10 +65,7 @@ class TSjson(object):
         '''Funcion para leer el contenido de un archivo json (datos json)'''
         read = self.read() # Leer todo el archivo json
 
-        if read != {}: # Si la lectura no es vacia
-            return read['Content'] # Devolvemos el contenido de la lectura (datos json)
-        else: # Lectura vacia
-            return read # Devolvemos la lectura vacia
+        return read['Content'] if read != {} else read
 
 
     def write_content(self, data):
@@ -87,10 +83,6 @@ class TSjson(object):
                     with open(self.file_name, "r", encoding="utf-8") as f: # Abrir el archivo en modo lectura
                         content = json.load(f, object_pairs_hook=OrderedDict) # Leer todo el archivo y devolver la lectura de los datos json usando un diccionario ordenado
 
-                    content['Content'].append(data) # Añadir los nuevos datos al contenido del json
-
-                    with open(self.file_name, 'w', encoding="utf-8") as f: # Abrir el archivo en modo escritura (sobre-escribe)
-                        json.dump(content, fp=f, ensure_ascii=False, indent=4)
                 else: # El archivo no existe o esta vacio
                     with open(self.file_name, 'w', encoding="utf-8") as f: # Abrir el archivo en modo escritura (sobre-escribe)
                         f.write('\n{\n    "Content": []\n}\n') # Escribir la estructura de contenido basica
@@ -98,10 +90,10 @@ class TSjson(object):
                     with open(self.file_name, "r", encoding="utf-8") as f: # Abrir el archivo en modo lectura
                         content = json.load(f) # Leer todo el archivo
 
-                    content['Content'].append(data) # Añadir los datos al contenido del json
+                content['Content'].append(data) # Añadir los nuevos datos al contenido del json
 
-                    with open(self.file_name, 'w', encoding="utf-8") as f:  # Abrir el archivo en modo escritura (sobre-escribe)
-                        json.dump(content, fp=f, ensure_ascii=False, indent=4)
+                with open(self.file_name, 'w', encoding="utf-8") as f: # Abrir el archivo en modo escritura (sobre-escribe)
+                    json.dump(content, fp=f, ensure_ascii=False, indent=4)
         except IOError as e:
             print("    I/O error({0}): {1}".format(e.errno, e.strerror))
         except ValueError:
@@ -114,13 +106,8 @@ class TSjson(object):
 
     def is_in(self, data):
         '''Funcion para determinar si el archivo json contiene un dato json concreto'''
-        found = False # Dato inicialmente no encontrado
         file_data = self.read() # Leer todo el archivo json
-        for _data in file_data['Content']: # Para cada dato en el archivo json
-            if data == _data: # Si el contenido del json tiene dicho dato
-                found = True # Marcar que se ha encontrado la posicion
-                break # Interrumpir y salir del bucle
-        return found
+        return any(data == _data for _data in file_data['Content'])
 
 
     def is_in_position(self, data):
@@ -132,7 +119,7 @@ class TSjson(object):
             if data == _data: # Si el contenido del json tiene dicho dato
                 found = True # Marcar que se ha encontrado la posicion
                 break # Interrumpir y salir del bucle
-            i = i + 1 # Incrementar la posicion del dato
+            i += 1
         return found, i # Devolvemos la tupla (encontrado, posicion)
 
 
@@ -156,16 +143,13 @@ class TSjson(object):
         Funcion para buscar un dato json concreto dentro del archivo json a partir de un elemento identificador unico (uide)
         [Nota: Cada dato json necesita al menos 1 elemento identificador unico (uide), si no es asi, la actualizacion se producira en el primer dato con dicho elemento uide que se encuentre]
         '''
-        result = dict() # Diccionario para el resultado de la busqueda
-        result['found'] = False # Dato inicialmente no encontrado
-        result['data'] = None # Dato encontrado inicialmente con ningun valor
+        result = {'found': False, 'data': None}
         file_data = self.read() # Leer todo el archivo json
         for element in file_data['Content']: # Para cada elemento en el archivo json
-            if element: # Si el contenido no esta vacio
-                if element_value == element[uide]: # Si el dato json tiene el UIDE buscado
-                    result['found'] = True # Marcar que se ha encontrado la posicion
-                    result['data'] = element # Obtenemos el dato encontrado
-                    break # Interrumpir y salir del bucle
+            if element and element_value == element[uide]: # Si el dato json tiene el UIDE buscado
+                result['found'] = True # Marcar que se ha encontrado la posicion
+                result['data'] = element # Obtenemos el dato encontrado
+                break # Interrumpir y salir del bucle
         return result # Devolver si se ha encontrado o no y el dato encontrado
 
 
@@ -183,7 +167,7 @@ class TSjson(object):
             if data[uide] == msg[uide]: # Si el dato json tiene el UIDE buscado
                 found = 1 # Marcar que se ha encontrado la posicion
                 break # Interrumpir y salir del bucle
-            i = i + 1 # Incrementar la posicion del dato
+            i += 1
 
         if found: # Si se encontro en el archivo json datos con el UIDE buscado
             file_data['Content'][i] = data # Actualizamos los datos json que contiene ese UIDE
@@ -206,7 +190,7 @@ class TSjson(object):
             if (data[uide1] == msg[uide1]) and (data[uide2] == msg[uide2]): # Si el dato json tiene el UIDE buscado
                 found = 1 # Marcar que se ha encontrado la posicion
                 break # Interrumpir y salir del bucle
-            i = i + 1 # Incrementar la posicion del dato
+            i += 1
 
         if found: # Si se encontro en el archivo json datos con el UIDE buscado
             file_data['Content'][i] = data # Actualizamos los datos json que contiene ese UIDE
