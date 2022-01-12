@@ -25,9 +25,7 @@ ANONYMOUS_ADMIN_ID = 1087968824
 
 def tlg_get_chat(bot, chat_id_or_alias, timeout=None):
     '''Telegram get chat data.'''
-    chat_result = dict()
-    chat_result["chat_data"] = None
-    chat_result["error"] = ""
+    chat_result = {'chat_data': None, 'error': ''}
     try:
         chat_result["chat_data"] = bot.get_chat(chat_id=chat_id_or_alias,
             timeout=timeout)
@@ -39,9 +37,7 @@ def tlg_get_chat(bot, chat_id_or_alias, timeout=None):
 
 def tlg_get_chat_member(bot, chat_id, user_id, timeout=None):
     '''telegram Get Chat member info.'''
-    result = dict()
-    result["member"] = None
-    result["error"] = ""
+    result = {'member': None, 'error': ''}
     try:
         result["member"] = bot.get_chat_member(chat_id=chat_id,
             user_id=user_id, timeout=timeout)
@@ -53,9 +49,7 @@ def tlg_get_chat_member(bot, chat_id, user_id, timeout=None):
 
 def tlg_get_chat_members_count(bot, chat_id, timeout=None):
     '''telegram Get number of members in a Chat.'''
-    result = dict()
-    result["num_members"] = None
-    result["error"] = ""
+    result = {'num_members': None, 'error': ''}
     try:
         result["num_members"] = bot.get_chat_members_count(chat_id=chat_id,
             timeout=timeout)
@@ -69,9 +63,7 @@ def tlg_send_msg(bot, chat_id, text, parse_mode=None,
     disable_web_page_preview=None, disable_notification=False,
     reply_to_message_id=None, reply_markup=None, timeout=None):
     '''Bot try to send a text message'''
-    sent_result = dict()
-    sent_result["msg"] = None
-    sent_result["error"] = ""
+    sent_result = {'msg': None, 'error': ''}
     if parse_mode == "HTML":
         parse_mode = ParseMode.HTML
     elif parse_mode == "MARKDOWN":
@@ -92,9 +84,7 @@ def tlg_send_image(bot, chat_id, photo, caption=None,
     disable_notification=False, reply_to_message_id=None,
     reply_markup=None, timeout=40, parse_mode=None):
     '''Bot try to send an image message'''
-    sent_result = dict()
-    sent_result["msg"] = None
-    sent_result["error"] = ""
+    sent_result = {'msg': None, 'error': ''}
     try:
         sent_result["msg"] = bot.send_photo(chat_id=chat_id, photo=photo,
             caption=caption, disable_notification=disable_notification,
@@ -114,9 +104,7 @@ def tlg_send_poll(bot, chat_id, question, options, correct_option_id=None,
                   explanation_parse_mode=DEFAULT_NONE, close_date=None,
                   timeout=40, **kwargs):
     '''Bot try to send a Poll message'''
-    sent_result = dict()
-    sent_result["msg"] = None
-    sent_result["error"] = ""
+    sent_result = {'msg': None, 'error': ''}
     try:
         sent_result["msg"] = bot.send_poll(chat_id=chat_id, question=question,
             options=options, is_anonymous=is_anonymous, type=type,
@@ -136,9 +124,7 @@ def tlg_send_poll(bot, chat_id, question, options, correct_option_id=None,
 def tlg_stop_poll(bot, chat_id, message_id, reply_markup=None,
                   timeout=None, **kwargs):
     '''Bot try to stop a Poll.'''
-    result = dict()
-    result["msg"] = None
-    result["error"] = ""
+    result = {'msg': None, 'error': ''}
     try:
         result["msg"] = bot.stop_poll(chat_id=chat_id, message_id=message_id,
             reply_markup=reply_markup, timeout=timeout, **kwargs)
@@ -150,8 +136,7 @@ def tlg_stop_poll(bot, chat_id, message_id, reply_markup=None,
 
 def tlg_delete_msg(bot, chat_id, msg_id, timeout=None):
     '''Try to remove a telegram message'''
-    delete_result = dict()
-    delete_result["error"] = ""
+    delete_result = {'error': ''}
     if msg_id is not None:
         try:
             bot.delete_message(chat_id=chat_id, message_id=msg_id,
@@ -165,8 +150,7 @@ def tlg_delete_msg(bot, chat_id, msg_id, timeout=None):
 def tlg_edit_msg_media(bot, chat_id, msg_id, inline_msg_id=None,
     media=None, reply_markup=None, timeout=None):
     '''Try to edit a telegram multimedia message'''
-    edit_result = dict()
-    edit_result["error"] = ""
+    edit_result = {'error': ''}
     try:
         bot.edit_message_media(chat_id=chat_id, message_id=msg_id,
             inline_message_id=inline_msg_id, media=media,
@@ -180,8 +164,7 @@ def tlg_edit_msg_media(bot, chat_id, msg_id, inline_msg_id=None,
 def tlg_answer_callback_query(bot, query, text=None, show_alert=False,
     url=None, cache_time=None, timeout=None):
     '''Try to send a telegram callback query answer'''
-    query_ans_result = dict()
-    query_ans_result["error"] = ""
+    query_ans_result = {'error': ''}
     try:
         bot.answer_callback_query(callback_query_id=query.id, text=text,
             show_alert=show_alert, url=url, cache_time=cache_time,
@@ -194,8 +177,7 @@ def tlg_answer_callback_query(bot, query, text=None, show_alert=False,
 
 def tlg_ban_user(bot, chat_id, user_id, timeout=None, until_date=None):
     '''Telegram Ban a user of an specified chat'''
-    ban_result = dict()
-    ban_result["error"] = ""
+    ban_result = {'error': ''}
     # Get chat member info
     member_info_result = tlg_get_chat_member(bot, chat_id, user_id)
     if member_info_result["member"] is None:
@@ -220,8 +202,7 @@ def tlg_ban_user(bot, chat_id, user_id, timeout=None, until_date=None):
 
 def tlg_kick_user(bot, chat_id, user_id, timeout=None):
     '''Telegram Kick a user of an specified chat'''
-    kick_result = dict()
-    kick_result["error"] = ""
+    kick_result = {'error': ''}
     # Ban the user (telegram doesn't have a kick method, so we need first
     # to ban and then remove ban restrictions of the user)
     kick_result = tlg_ban_user(bot, chat_id, user_id)
@@ -281,29 +262,25 @@ def tlg_user_is_admin(bot, user_id, chat_id, timeout=None):
     except Exception as e:
         printts("[{}] {}".format(chat_id, str(e)))
         return None
-    # Check if the user is one of the group Admins
-    for admin in group_admins:
-        if user_id == admin.user.id:
-            return True
-    return False
+    return any(user_id == admin.user.id for admin in group_admins)
 
 
 def tlg_get_chat_type(bot, chat_id_or_alias, timeout=None):
     '''Telegram check if a chat exists and what type it is (user, group, '''
     '''channel).'''
-    chat_type = None
     chat_result = tlg_get_chat(bot, chat_id_or_alias, timeout)
-    if chat_result["chat_data"] is not None:
-        chat_type = getattr(chat_result["chat_data"], "type", None)
-    return chat_type
+    return (
+        getattr(chat_result["chat_data"], "type", None)
+        if chat_result["chat_data"] is not None
+        else None
+    )
 
 
 def tlg_is_valid_user_id_or_alias(user_id_alias):
     '''Check if given telegram ID or alias has a valid expected format.'''
     # Check if it is a valid alias (start with @ and have 5 characters or more)
-    if user_id_alias[0] == '@':
-        if len(user_id_alias) > 5:
-            return True
+    if user_id_alias[0] == '@' and len(user_id_alias) > 5:
+        return True
     # Check if it is a valid ID (is a number larger than 0)
     try:
         user_id = int(user_id_alias)
@@ -331,10 +308,7 @@ def tlg_is_valid_group(group):
 
 def tlg_alias_in_string(str_text):
     ''' Check if a string contains an alias.'''
-    for word in str_text.split():
-        if (len(word) > 1) and (word[0] == '@'):
-            return True
-    return False
+    return any((len(word) > 1) and (word[0] == '@') for word in str_text.split())
 
 
 def tlg_extract_members_status_change(

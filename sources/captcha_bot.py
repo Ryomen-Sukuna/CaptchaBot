@@ -118,13 +118,11 @@ def signal_handler(signal,  frame):
                 th.join()
     # Wait to end threads
     printts("Waiting th_0 end...")
-    if th_0 is not None:
-        if th_0.is_alive():
-            th_0.join()
+    if th_0 is not None and th_0.is_alive():
+        th_0.join()
     printts("Waiting th_1 end...")
-    if th_1 is not None:
-        if th_1.is_alive():
-            th_1.join()
+    if th_1 is not None and th_1.is_alive():
+        th_1.join()
     # Close the program
     printts("All resources released.")
     printts("Exit 0")
@@ -167,7 +165,7 @@ def get_default_config_data():
         ("Ignore_List", [])
     ])
     # Feed Captcha Poll Options with empty answers for expected max num
-    for _ in range(0, CONST["MAX_POLL_OPTIONS"]):
+    for _ in range(CONST["MAX_POLL_OPTIONS"]):
         config_data["Poll_A"].append("")
     return config_data
 
@@ -255,9 +253,8 @@ def tlg_msg_to_selfdestruct_in(message, time_delete_min):
         return False
     if not hasattr(message, "from_user"):
         return False
-    else:
-        if not hasattr(message.from_user, "id"):
-            return False
+    if not hasattr(message.from_user, "id"):
+        return False
     # Get sent message ID and calculate delete time
     chat_id = message.chat_id
     user_id = message.from_user.id
@@ -290,9 +287,8 @@ def initialize_resources():
     if not path.exists(CONST["F_BAN_GROUPS"]):
         file_write(CONST["F_BAN_GROUPS"], "")
     # Create allowed groups file if it does not exists
-    if CONST["BOT_PRIVATE"]:
-        if not path.exists(CONST["F_ALLOWED_GROUPS"]):
-            file_write(CONST["F_ALLOWED_GROUPS"], "")
+    if CONST["BOT_PRIVATE"] and not path.exists(CONST["F_ALLOWED_GROUPS"]):
+        file_write(CONST["F_ALLOWED_GROUPS"], "")
     # Create data directory if it does not exists
     if not path.exists(CONST["CHATS_DIR"]):
         makedirs(CONST["CHATS_DIR"])
@@ -317,14 +313,13 @@ def initialize_resources():
 
 def load_urls_regex(file_path):
     '''Load URL detection Regex from IANA TLD list text file.'''
-    tlds_str = ""
     list_file_lines = []
     try:
         with open(file_path, "r") as f:
             for line in f:
                 if line is None:
                     continue
-                if (line == "") or (line == "\r\n") or (line == "\r") or (line == "\n"):
+                if line in ["", "\r\n", "\r", "\n"]:
                     continue
                 # Ignore lines that start with # (first header line of IANA TLD list file)
                 if line[0] == "#":
@@ -335,8 +330,8 @@ def load_urls_regex(file_path):
                 list_file_lines.append(line)
     except Exception as e:
         printts("Error opening file \"{}\". {}".format(file_path, str(e)))
-    if len(list_file_lines) > 0:
-        tlds_str = "".join(list_file_lines)
+    tlds_str = "".join(list_file_lines) if list_file_lines else ""
+
     CONST["REGEX_URLS"] = CONST["REGEX_URLS"].format(tlds_str)
 
 
@@ -384,13 +379,10 @@ def create_image_captcha(chat_id, file_name, difficult_level, captcha_mode):
     img_file_path = "{}/{}.png".format(img_dir_path, file_name)
     if not path.exists(CONST["CAPTCHAS_DIR"]):
         makedirs(CONST["CAPTCHAS_DIR"])
-    else:
-        if not path.exists(img_dir_path):
-            makedirs(img_dir_path)
-        else:
-            # If the captcha file exists remove it
-            if path.exists(img_file_path):
-                remove(img_file_path)
+    elif not path.exists(img_dir_path):
+        makedirs(img_dir_path)
+    elif path.exists(img_file_path):
+        remove(img_file_path)
     # Generate and save the captcha with a random background
     # mono-color or multi-color
     if captcha_mode == "math":
@@ -405,11 +397,7 @@ def create_image_captcha(chat_id, file_name, difficult_level, captcha_mode):
 
 def num_config_poll_options(poll_options):
     '''Check how many poll options are configured.'''
-    configured_options = 0
-    for i in range(0, CONST["MAX_POLL_OPTIONS"]):
-        if poll_options[i] != "":
-            configured_options = configured_options + 1
-    return configured_options
+    return sum(poll_options[i] != "" for i in range(CONST["MAX_POLL_OPTIONS"]))
 
 
 def is_user_in_ignored_list(chat_id, user):
@@ -464,9 +452,7 @@ def allowed_in_this_group(bot, chat, member_added_by):
             from_user_name = member_added_by.name
         else:
             from_user_name = member_added_by.full_name
-        chat_link = ""
-        if chat.username:
-            chat_link = "@{}".format(chat.username)
+        chat_link = "@{}".format(chat.username) if chat.username else ""
         printts("{}, {}, {}, {}".format(chat.id, from_user_name, chat.title,
                 chat_link))
         msg_text = CONST["NOT_ALLOW_GROUP"].format(CONST["BOT_OWNER"], chat.id,
@@ -495,30 +481,24 @@ def chat_bot_status_change(update: Update, context: CallbackContext):
     caused_by_user = update.effective_user
     # Private Chat
     if chat.type == Chat.PRIVATE:
-        return
-        # Bot private conversation started
-        #if not was_member and is_member:
-        #    # ...
-        # Bot private conversation blocked
-        #elif was_member and not is_member:
-        #    # ...
-        #else:
-        #    return
-    # Groups
+        pass
+            # Bot private conversation started
+            #if not was_member and is_member:
+            #    # ...
+            # Bot private conversation blocked
+            #elif was_member and not is_member:
+            #    # ...
+            #else:
+            #    return
     elif chat.type in [Chat.GROUP, Chat.SUPERGROUP]:
         # Bot added to group
         if not was_member and is_member:
             # Check if Group is not allowed to be used by the Bot
             if not allowed_in_this_group(bot, chat, caused_by_user):
                 tlg_leave_chat(bot, chat.id)
-            # Get the language of the Telegram client software the Admin
-            # that has added the Bot has, to assume this is the chat language
-            # and configure Bot language of this chat
-            admin_language = ""
             #language_code = getattr(caused_by_user, "language_code", None)
             language_code = "VN"
-            if language_code:
-                admin_language = language_code[0:2].upper()
+            admin_language = language_code[:2].upper() if language_code else ""
             if admin_language not in TEXT:
                 admin_language = CONST["INIT_LANG"]
             save_config_property(chat.id, "Language", admin_language)
@@ -530,8 +510,6 @@ def chat_bot_status_change(update: Update, context: CallbackContext):
                 save_config_property(chat.id, "Link", chat_link)
             # Send bot join message
             tlg_send_msg(bot, chat.id, TEXT[admin_language]["START"])
-            return
-        # Bot leave/removed from group
         elif was_member and not is_member:
             # Bot leave the group
             if caused_by_user.id == bot.id:
@@ -541,21 +519,12 @@ def chat_bot_status_change(update: Update, context: CallbackContext):
             else:
                 print("[{}] Bot removed from group by {}".format(
                         chat.id, caused_by_user.username))
-            return
-        else:
-            return
-    # Channels
-    else:
-        # Bot added to channel
-        if not was_member and is_member:
-            # Leave it (Bot don't allowed to be used in Channels)
-            printts("Bot try to be added to a channel")
-            tlg_send_msg(bot, chat.id, CONST["BOT_LEAVE_CHANNEL"])
-            tlg_leave_chat(bot, chat.id)
-            return
-        # Bot leave/removed channel
-        else:
-            return
+    elif not was_member and is_member:
+        # Leave it (Bot don't allowed to be used in Channels)
+        printts("Bot try to be added to a channel")
+        tlg_send_msg(bot, chat.id, CONST["BOT_LEAVE_CHANNEL"])
+        tlg_leave_chat(bot, chat.id)
+    return
 
 
 def chat_member_status_change(update: Update, context: CallbackContext):

@@ -21,30 +21,27 @@ def printts(to_print="", timestamp=True):
     # Normal print if timestamp is disabled
     if (not timestamp):
         print_without_ts = True
-    else:
-        # If to_print is text and not other thing
-        if isinstance(to_print, str):
-            # Normalize EOLs to new line
-            to_print = to_print.replace("\r", "\n")
+    elif isinstance(to_print, str):
+        # Normalize EOLs to new line
+        to_print = to_print.replace("\r", "\n")
             # If no text provided or text just contain spaces or EOLs
-            if to_print == "":
-                print_without_ts = True
-            elif (" " in to_print) and (len(set(to_print)) == 1):
-                print_without_ts = True
-            elif ("\n" in to_print) and (len(set(to_print)) == 1):
-                print_without_ts = True
-            else:
-                # Normal print for all text start EOLs
-                num_eol = -1
-                for character in to_print:
-                    if character == '\n':
-                        print("")
-                        num_eol = num_eol + 1
-                    else:
-                        break
-                # Remove all text start EOLs (if any)
-                if num_eol != -1:
-                    to_print = to_print[num_eol+1:]
+        if to_print == "":
+            print_without_ts = True
+        elif (" " in to_print) and (len(set(to_print)) == 1):
+            print_without_ts = True
+        elif ("\n" in to_print) and (len(set(to_print)) == 1):
+            print_without_ts = True
+        else:
+            # Normal print for all text start EOLs
+            num_eol = -1
+            for character in to_print:
+                if character != '\n':
+                    break
+                print("")
+                num_eol += 1
+            # Remove all text start EOLs (if any)
+            if num_eol != -1:
+                to_print = to_print[num_eol+1:]
     try:
         #to_print = str(to_print.encode('utf-8'))
         if print_without_ts:
@@ -135,7 +132,7 @@ def file_read(file_path):
             for line in f:
                 if line is None:
                     continue
-                if (line == "") or (line == "\r\n") or (line == "\r") or (line == "\n"):
+                if line in ["", "\r\n", "\r", "\n"]:
                     continue
                 line = line.replace("\r", "")
                 line = line.replace("\n", "")
